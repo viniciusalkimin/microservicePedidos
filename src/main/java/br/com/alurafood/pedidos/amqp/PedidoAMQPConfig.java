@@ -14,6 +14,7 @@ public class PedidoAMQPConfig {
     public Queue filaDetalhesPedido() {
         return QueueBuilder
                 .nonDurable("pagamentos.detalhes-pedido")
+                .deadLetterExchange("pagamentos.dlx")
                 .build();
     }
 
@@ -29,6 +30,27 @@ public class PedidoAMQPConfig {
         return BindingBuilder
                 .bind(filaDetalhesPedido())
                 .to(fanoutExchange());
+    }
+
+    @Bean
+    public Queue filaDlqDetalhesPedidos() {
+        return QueueBuilder
+                .nonDurable("pagamentos.detalhes-pedidos-dlq")
+                .build();
+    }
+
+    @Bean
+    public FanoutExchange deadLetterExchange() {
+        return ExchangeBuilder
+                .fanoutExchange("pagamentos.dlx")
+                .build();
+    }
+
+    @Bean
+    public Binding bindDlxPagamentoPedido() {
+        return BindingBuilder
+                .bind(filaDlqDetalhesPedidos())
+                .to(deadLetterExchange());
     }
 
     @Bean
